@@ -10,9 +10,11 @@ def build(bld):
     module = bld.create_ns3_module('nr', ['core','internet'])
     module.source = [
         'model/nr-rlc-sequence-number.cc',
+        'model/nr-rlc-header.cc',
         'model/nr-rlc-sap.cc',
         'model/nr-mac-sap.cc',
         'model/nr-rlc.cc',
+        'model/nr-rlc-um.cc',
         'helper/nr-helper.cc',
         ]
 
@@ -25,9 +27,11 @@ def build(bld):
     headers.module = 'nr'
     headers.source = [
         'model/nr-rlc-sequence-number.h',
+        'model/nr-rlc-header.h',
         'model/nr-rlc-sap.h',
         'model/nr-mac-sap.h',
         'model/nr-rlc.h',
+        'model/nr-rlc-um.h',
         'helper/nr-helper.h',
         ]
 

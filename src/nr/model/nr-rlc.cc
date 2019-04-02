@@ -7,55 +7,53 @@ namespace ns3
 {
 NS_LOG_COMPONENT_DEFINE("NrRlc");
 
-NS_OBJECT_ENSURE_REGISTERED(NrRlc);
 class NrRlcSpecificNrMacSapUser : public NrMacSapUser
 {
-public:
-  NrRlcSpecificNrMacSapUser (NrRlc* rlc);
+  public:
+	NrRlcSpecificNrMacSapUser(NrRlc *rlc);
 
-  // Interface implemented from NrMacSapUser
-  virtual void NotifyTxOpportunity (uint32_t bytes, uint8_t layer, uint8_t harqId);
-  virtual void NotifyHarqDeliveryFailure ();
-  virtual void NotifyHarqDeliveryFailure (uint8_t harqId);
-  virtual void ReceivePdu (Ptr<Packet> p);
+	// Interface implemented from NrMacSapUser
+	virtual void NotifyTxOpportunity(uint32_t bytes, uint8_t layer, uint8_t harqId);
+	virtual void NotifyHarqDeliveryFailure();
+	virtual void NotifyHarqDeliveryFailure(uint8_t harqId);
+	virtual void ReceivePdu(Ptr<Packet> p);
 
-private:
-  NrRlcSpecificNrMacSapUser ();
-  NrRlc* m_rlc;
+  private:
+	NrRlcSpecificNrMacSapUser();
+	NrRlc *m_rlc;
 };
 
-NrRlcSpecificNrMacSapUser::NrRlcSpecificNrMacSapUser (NrRlc* rlc)
-  : m_rlc (rlc)
+NrRlcSpecificNrMacSapUser::NrRlcSpecificNrMacSapUser(NrRlc *rlc)
+	: m_rlc(rlc)
 {
 }
 
-NrRlcSpecificNrMacSapUser::NrRlcSpecificNrMacSapUser ()
+NrRlcSpecificNrMacSapUser::NrRlcSpecificNrMacSapUser()
 {
 }
 
-void
-NrRlcSpecificNrMacSapUser::NotifyTxOpportunity (uint32_t bytes, uint8_t layer, uint8_t harqId)
+void NrRlcSpecificNrMacSapUser::NotifyTxOpportunity(uint32_t bytes, uint8_t layer, uint8_t harqId)
 {
-  m_rlc->DoNotifyTxOpportunity (bytes, layer, harqId);
+	m_rlc->DoNotifyTxOpportunity(bytes, layer, harqId);
 }
 
-void
-NrRlcSpecificNrMacSapUser::NotifyHarqDeliveryFailure ()
+void NrRlcSpecificNrMacSapUser::NotifyHarqDeliveryFailure()
 {
-  m_rlc->DoNotifyHarqDeliveryFailure ();
+	m_rlc->DoNotifyHarqDeliveryFailure();
 }
 
-void
-NrRlcSpecificNrMacSapUser::NotifyHarqDeliveryFailure (uint8_t harqId)
+void NrRlcSpecificNrMacSapUser::NotifyHarqDeliveryFailure(uint8_t harqId)
 {
-  m_rlc->DoNotifyHarqDeliveryFailure (harqId);
+	m_rlc->DoNotifyHarqDeliveryFailure(harqId);
 }
 
-void
-NrRlcSpecificNrMacSapUser::ReceivePdu (Ptr<Packet> p)
+void NrRlcSpecificNrMacSapUser::ReceivePdu(Ptr<Packet> p)
 {
-  m_rlc->DoReceivePdu (p);
+	m_rlc->DoReceivePdu(p);
 }
+
+/////////////////////////////////////////////////////
+NS_OBJECT_ENSURE_REGISTERED(NrRlc);
 
 TypeId
 NrRlc::GetTypeId(void)
