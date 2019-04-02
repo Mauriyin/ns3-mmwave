@@ -1,0 +1,38 @@
+# -*- Mode: python; py-indent-offset: 4; indent-tabs-mode: nil; coding: utf-8; -*-
+
+# def options(opt):
+#     pass
+
+# def configure(conf):
+#     conf.check_nonfatal(header_name='stdint.h', define_name='HAVE_STDINT_H')
+
+def build(bld):
+    module = bld.create_ns3_module('nr', ['core','internet'])
+    module.source = [
+        'model/nr-rlc-sequence-number.cc',
+        'model/nr-rlc-sap.cc',
+        'model/nr-mac-sap.cc',
+        'model/nr-rlc.cc',
+        'helper/nr-helper.cc',
+        ]
+
+    module_test = bld.create_ns3_module_test_library('nr')
+    module_test.source = [
+        'test/nr-test-suite.cc',
+        ]
+
+    headers = bld(features='ns3header')
+    headers.module = 'nr'
+    headers.source = [
+        'model/nr-rlc-sequence-number.h',
+        'model/nr-rlc-sap.h',
+        'model/nr-mac-sap.h',
+        'model/nr-rlc.h',
+        'helper/nr-helper.h',
+        ]
+
+    if bld.env.ENABLE_EXAMPLES:
+        bld.recurse('examples')
+
+    # bld.ns3_python_bindings()
+
