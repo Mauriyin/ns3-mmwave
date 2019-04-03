@@ -21,6 +21,10 @@ public:
 
 private:
   virtual void DoRun (void);
+  virtual void Recv (void);
+  Ptr<NrTestPdcp> txPdcp;
+  Ptr<NrRlc> txRlc;
+  Ptr<NrTestMac> txMac;
 };
 
 // Add some help text to this case to describe what it is intended to test
@@ -52,8 +56,27 @@ NrTestCase1::DoRun (void)
   txRlc->SetRnti (rnti);
   txRlc->SetLcId (lcid);
 
-  Ptr<NrTestMac> txMac=CreateObject<NrTestMac>();
+  Ptr<NrTestMac> txMac = CreateObject<NrTestMac> ();
 
+  txPdcp->SetNrRlcSapProvider (txRlc->GetNrRlcSapProvider ());
+  txRlc->SetNrRlcSapUser (txPdcp->GetNrRlcSapUser ());
+
+  txRlc->SetNrMacSapProvider (txMac->GetNrMacSapProvider ());
+  txMac->SetNrMacSapUser (txRlc->GetNrMacSapUser ());
+
+  txPdcp->SendData (Seconds (0), "abcdefghijklmnopqrstuvwxyz");
+  txMac->SendTxOpportunity (Seconds (0.1), 128);
+
+  Simulator::Schedule (Seconds (1), &NrTestCase1::Recv, this);
+
+  Simulator::Run ();
+  Simulator::Stop (Seconds (5));
+}
+void
+NrTestCase1::Recv (void)
+{
+  std::string ret = txPdcp->GetDataReceived ();
+  std::cout << ret;
 }
 
 // The TestSuite class names the TestSuite, identifies what type of TestSuite,

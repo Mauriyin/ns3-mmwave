@@ -48,7 +48,7 @@ NrTestMac::GetNrMacSapProvider (void)
 void NrTestMac::DoTransmitPdu (NrMacSapProvider::TransmitPduParameters params)
 {
   NS_LOG_FUNCTION (this);
-  Simulator::Schedule (Seconds (0), &NrMacSapUser::ReceivePdu, m_macSapUser, params.pdu);
+  Simulator::Schedule (Seconds (0.1), &NrMacSapUser::ReceivePdu, m_macSapUser, params.pdu);
 }
 void NrTestMac::DoReportBufferStatus (NrMacSapProvider::ReportBufferStatusParameters)
 {

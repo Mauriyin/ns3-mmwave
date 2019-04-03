@@ -3,7 +3,8 @@
 #include "nr-rlc-sdu-tag.h"
 namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("NrRlcUm");
-NrRlcUm::NrRlcUm ()
+NS_OBJECT_ENSURE_REGISTERED (NrRlcUm);
+NrRlcUm::NrRlcUm () : m_TxBufferSize (0)
 {
   NS_LOG_FUNCTION (this);
 }
@@ -70,7 +71,15 @@ void
 NrRlcUm::DoNotifyTxOpportunity (uint32_t bytes, uint8_t layer, uint8_t harqId)
 {
   NS_LOG_FUNCTION (this << (uint32_t) m_rnti << (uint32_t) m_lcid << bytes);
-  Ptr<Packet> packet = Create<Packet> ();
+  Ptr<Packet> packet = m_txBuffer.front ()->Copy ();
+  m_txBuffer.pop_front ();
+  NrMacSapProvider::TransmitPduParameters params;
+  params.pdu = packet;
+  params.rnti = m_rnti;
+  params.lcid = m_lcid;
+  params.layer = layer;
+  params.harqProcessId = harqId;
+  m_macSapProvider->TransmitPdu (params);
 }
 void
 NrRlcUm::DoNotifyHarqDeliveryFailure ()
@@ -81,5 +90,6 @@ void
 NrRlcUm::DoReceivePdu (Ptr<Packet> p)
 {
   NS_LOG_FUNCTION (this << (uint32_t) m_rnti << (uint32_t) m_lcid << p->GetSize ());
+  m_rlcSapUser->ReceivePdcpPdu (p);
 }
 } // namespace ns3
