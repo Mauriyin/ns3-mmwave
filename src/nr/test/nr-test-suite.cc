@@ -2,6 +2,7 @@
 
 // Include a header file from your module to test.
 #include "ns3/test-pdcp.h"
+#include "ns3/test-mac.h"
 #include "ns3/nr-rlc-um.h"
 
 // An essential include is test.h
@@ -50,6 +51,9 @@ NrTestCase1::DoRun (void)
   Ptr<NrRlc> txRlc = CreateObject<NrRlcUm> ();
   txRlc->SetRnti (rnti);
   txRlc->SetLcId (lcid);
+
+  Ptr<NrTestMac> txMac=CreateObject<NrTestMac>();
+
 }
 
 // The TestSuite class names the TestSuite, identifies what type of TestSuite,

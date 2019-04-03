@@ -18,6 +18,7 @@ def build(bld):
         'model/nr-rlc.cc',
         'model/nr-rlc-um.cc',
         'model/test-pdcp.cc',
+        'model/test-mac.cc',
         'helper/nr-helper.cc',
         ]
 
@@ -38,6 +39,7 @@ def build(bld):
         'model/nr-rlc.h',
         'model/nr-rlc-um.h',
         'model/test-pdcp.h',
+        'model/test-mac.h',
         'helper/nr-helper.h',
         ]
 
