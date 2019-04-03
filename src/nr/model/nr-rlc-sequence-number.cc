@@ -7,20 +7,5 @@ std::ostream &operator<<(std::ostream &os, const SequenceNumber &val)
     os << val.m_value;
     return os;
 }
-std::ostream &operator<<(std::ostream &os, const SequenceNumber6 &val)
-{
-    os << val.m_value;
-    return os;
-}
-std::ostream &operator<<(std::ostream &os, const SequenceNumber12 &val)
-{
-    os << val.m_value;
-    return os;
-}
-std::ostream &operator<<(std::ostream &os, const SequenceNumber18 &val)
-{
-    os << val.m_value;
-    return os;
-}
 
 } // namespace ns3

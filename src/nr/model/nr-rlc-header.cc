@@ -1,42 +1,76 @@
 #include "ns3/log.h"
 #include "nr-rlc-header.h"
-namespace ns3
-{
-NS_LOG_COMPONENT_DEFINE("NrRlcHeader");
+namespace ns3 {
+NS_LOG_COMPONENT_DEFINE ("NrRlcUmHeader");
 
-NS_OBJECT_ENSURE_REGISTERED(NrRlcHeader);
+NS_OBJECT_ENSURE_REGISTERED (NrRlcUmHeader);
 
-NrRlcHeader::NrRlcHeader()
+NrRlcUmHeader::NrRlcUmHeader ():m_SN(0)
 {
 }
-NrRlcHeader::~NrRlcHeader(){
+NrRlcUmHeader::~NrRlcUmHeader (){
 
 };
-TypeId NrRlcHeader::GetTypeId(void)
+TypeId
+NrRlcUmHeader::GetTypeId (void)
 {
-    static TypeId tid =
-        TypeId("ns3::NrRlcHeader")
-            .SetParent<Header>()
-            .SetGroupName("Nr")
-            .AddConstructor<NrRlcHeader>();
-    return tid;
+  static TypeId tid = TypeId ("ns3::NrRlcUmHeader")
+                          .SetParent<Header> ()
+                          .SetGroupName ("Nr")
+                          .AddConstructor<NrRlcUmHeader> ();
+  return tid;
 }
-TypeId NrRlcHeader::GetInstanceTypeId(void) const
+TypeId
+NrRlcUmHeader::GetInstanceTypeId (void) const
 {
-    return GetTypeId();
+  return GetTypeId ();
 }
-uint32_t NrRlcHeader::GetSerializedSize(void) const
+uint32_t
+NrRlcUmHeader::GetSerializedSize (void) const
 {
-    return 0;
+  uint8_t headerLen;
+  switch (m_type)
+    {
+    case PDU_COMPLETE:
+    case SN6:
+      headerLen = 1;
+      break;
+    case SN12:
+      headerLen = 2;
+      break;
+    case SN6SO:
+      headerLen = 3;
+      break;
+    case SN12SO:
+      headerLen = 4;
+      break;
+    default:
+      NS_ABORT_MSG ("Header has not been init");
+    }
+  return headerLen + m_packetLen;
 }
-void NrRlcHeader::Serialize(Buffer::Iterator iter) const
+void
+NrRlcUmHeader::Serialize (Buffer::Iterator iter) const
 {
+    
 }
-uint32_t NrRlcHeader::Deserialize(Buffer::Iterator iter)
+uint32_t
+NrRlcUmHeader::Deserialize (Buffer::Iterator iter)
 {
-    return 0;
+  return 0;
 }
-void NrRlcHeader::Print(std::ostream &os) const
+void
+NrRlcUmHeader::Print (std::ostream &os) const
 {
+    os<<"SI: "<<m_SI<<" ";
+    os<<"SN: "<<m_SN<<" ";
+
+}
+
+void
+NrRlcUmHeader::SetHeaderType (PduType_t type)
+{
+  NS_LOG_FUNCTION (this << type);
+  m_type = type;
 }
 } // namespace ns3
