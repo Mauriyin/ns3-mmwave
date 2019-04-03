@@ -4,6 +4,7 @@
 #include "nr-rlc-sequence-number.h"
 #include "ns3/timer.h"
 #include "ns3/packet.h"
+#include <map>
 namespace ns3 {
 class NrRlcUm : public NrRlc
 {
