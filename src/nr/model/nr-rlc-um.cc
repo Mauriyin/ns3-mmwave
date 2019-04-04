@@ -71,7 +71,7 @@ void
 NrRlcUm::DoNotifyTxOpportunity (uint32_t bytes, uint8_t layer, uint8_t harqId)
 {
   NS_LOG_FUNCTION (this << (uint32_t) m_rnti << (uint32_t) m_lcid << bytes);
-  Ptr<Packet> packet = m_txBuffer.front ()->Copy ();
+  /*Ptr<Packet> packet = m_txBuffer.front ()->Copy ();
   m_txBuffer.pop_front ();
   NrMacSapProvider::TransmitPduParameters params;
   params.pdu = packet;
@@ -79,7 +79,9 @@ NrRlcUm::DoNotifyTxOpportunity (uint32_t bytes, uint8_t layer, uint8_t harqId)
   params.lcid = m_lcid;
   params.layer = layer;
   params.harqProcessId = harqId;
-  m_macSapProvider->TransmitPdu (params);
+  m_macSapProvider->TransmitPdu (params);*/
+  Ptr<Packet> packet=Create<Packet>();
+  
 }
 void
 NrRlcUm::DoNotifyHarqDeliveryFailure ()

@@ -5,7 +5,7 @@ NS_LOG_COMPONENT_DEFINE ("NrRlcUmHeader");
 
 NS_OBJECT_ENSURE_REGISTERED (NrRlcUmHeader);
 
-NrRlcUmHeader::NrRlcUmHeader ():m_SN(0)
+NrRlcUmHeader::NrRlcUmHeader () : m_SN (0), m_SI (SI_UNKNOW), m_SO (0), m_type (PDU_UNKNOW)
 {
 }
 NrRlcUmHeader::~NrRlcUmHeader (){
@@ -47,24 +47,87 @@ NrRlcUmHeader::GetSerializedSize (void) const
     default:
       NS_ABORT_MSG ("Header has not been init");
     }
-  return headerLen + m_packetLen;
+  return headerLen;
 }
 void
 NrRlcUmHeader::Serialize (Buffer::Iterator iter) const
 {
-    
+  switch (m_type)
+    {
+    case PDU_COMPLETE:
+      iter.WriteU8 ((uint8_t) m_SI);
+      break;
+    case PDU_SN6:
+      iter.WriteU8 ((uint8_t) m_SI | (uint8_t) m_SN);
+      break;
+    case PDU_SN12:
+      iter.WriteU8 ((uint8_t) m_SI | (uint8_t) (m_SN >> 8));
+      iter.WriteU8 ((uint8_t) m_SN);
+      break;
+    case PDU_SN6SO:
+      iter.WriteU8 ((uint8_t) m_SI | (uint8_t) m_SN);
+      iter.WriteU16 (m_SO);
+      break;
+    case PDU_SN12SO:
+      iter.WriteU8 ((uint8_t) m_SI | (uint8_t) (m_SN >> 8));
+      iter.WriteU8 ((uint8_t) m_SN);
+      iter.WriteU16 (m_SO);
+      break;
+
+    default:
+      break;
+    }
 }
 uint32_t
 NrRlcUmHeader::Deserialize (Buffer::Iterator iter)
 {
-  return 0;
+  uint8_t tmp;
+  switch (m_type)
+    {
+    case PDU_COMPLETE:
+      m_SI = (uint16_t) iter.ReadU8 ();
+      return 1;
+    case PDU_SN6:
+      tmp = iter.ReadU8 ();
+      m_SI = tmp & SI_MASK;
+      m_SN = (uint16_t) (tmp & SN6_MASK);
+      return 1;
+    case PDU_SN12:
+      tmp = iter.ReadU8 ();
+      m_SI = tmp & SI_MASK;
+      m_SN = (uint16_t) (tmp & SN6_MASK) << 8 | iter.ReadU8 ();
+      return 2;
+    case PDU_SN6SO:
+      tmp = iter.ReadU8 ();
+      m_SI = tmp & SI_MASK;
+      m_SN = (uint16_t) (tmp & SN6_MASK);
+      m_SO = iter.ReadU16 ();
+      return 3;
+    case PDU_SN12SO:
+      tmp = iter.ReadU8 ();
+      m_SI = tmp & SI_MASK;
+      m_SN = (uint16_t) (tmp & SN6_MASK) << 8 | iter.ReadU8 ();
+      m_SO = iter.ReadU16 ();
+      return 4;
+
+    default:
+      return 0;
+    }
 }
 void
 NrRlcUmHeader::Print (std::ostream &os) const
 {
-    os<<"SI: "<<m_SI<<" ";
-    os<<"SN: "<<m_SN<<" ";
-
+  os << "Type: " << m_type << " ";
+  os << "SI: " << m_SI << " ";
+  switch (m_type)
+    {
+    case SN6SO:
+    case SN12SO:
+      os << "SO: " << m_SI << " ";
+    case SN6:
+    case SN12:
+      os << "SN: " << m_SN << " ";
+    }
 }
 
 void
@@ -72,5 +135,23 @@ NrRlcUmHeader::SetHeaderType (PduType_t type)
 {
   NS_LOG_FUNCTION (this << type);
   m_type = type;
+}
+void
+NrRlcUmHeader::SetSequenceNumber (SequenceNumber sn)
+{
+  NS_LOG_FUNCTION (this << sn);
+  m_SN = sn.GetValue ();
+}
+void
+NrRlcUmHeader::SetSegmentationInfo (SIType_t si)
+{
+  NS_LOG_FUNCTION (this << si);
+  m_SI = si;
+}
+void
+NrRlcUmHeader::SetSegmentOffset (uint32_t so)
+{
+  NS_LOG_FUNCTION (this << so);
+  m_SO = so;
 }
 } // namespace ns3

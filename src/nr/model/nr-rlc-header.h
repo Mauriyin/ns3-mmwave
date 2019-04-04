@@ -3,24 +3,27 @@
 #include <ns3/packet.h>
 
 namespace ns3 {
-
+const uint8_t SI_MASK = 0xc0;
+const uint8_t SN6_MASK = 0x3f;
 class NrRlcUmHeader : public Header
 {
 public:
   typedef enum {
     PDU_COMPLETE, //UMD PDU containing a complete RLC SDU
-    SN6, //UMD PDU with 6 bit SN (NO SO)
-    SN12, //UMD PDU with 12 bit SN (NO SO)
-    SN6SO, //UMD PDU with 6 bit SN and with SO
-    SN12SO, //UMD PDU with 12 bit SN and with SO
+    PDU_SN6, //UMD PDU with 6 bit SN (NO SO)
+    PDU_SN12, //UMD PDU with 12 bit SN (NO SO)
+    PDU_SN6SO, //UMD PDU with 6 bit SN and with SO
+    PDU_SN12SO, //UMD PDU with 12 bit SN and with SO
     PDU_UNKNOW
   } PduType_t;
 
   typedef enum {
-    ALL = 0x0, //Data field contains all bytes of an RLC SDU
-    FIRST_SEG = 0x1, //Data field contains the first segment of an RLC SDU
-    LAST_SEG = 0x2, //Data field contains the last segment of an RLC SDU
-    OTHER = 0x3 //Data field contains neither the first segment nor the last segment of an RLC SDU
+    SI_ALL = 0x0, //Data field contains all bytes of an RLC SDU
+    SI_FIRST_SEG = 0x40, //Data field contains the first segment of an RLC SDU
+    SI_LAST_SEG = 0x80, //Data field contains the last segment of an RLC SDU
+    SI_OTHER =
+        0xc0, //Data field contains neither the first segment nor the last segment of an RLC SDU
+    SI_UNKNOW = 0xff
   } SIType_t;
 
   NrRlcUmHeader ();
@@ -32,15 +35,16 @@ public:
   virtual uint32_t Deserialize (Buffer::Iterator iter);
   virtual void Print (std::ostream &os) const;
 
-  virtual void SetHeaderType(PduType_t type);
+  virtual void SetHeaderType (PduType_t type);
+  virtual void SetSequenceNumber (SequenceNumber sn);
+  virtual void SetSegmentationInfo (SIType_t si);
+  virtual void SetSegmentOffset (uint32_t so);
 
 private:
-  uint8_t m_SI;
   uint16_t m_SN;
   uint16_t m_SO;
+  SIType_t m_SI;
   PduType_t m_type;
-  SIType_t m_SIType;
-  uint16_t m_packetLen;
 };
 } // namespace ns3
 #endif
