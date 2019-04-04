@@ -1,6 +1,7 @@
 #ifndef NR_RLC_HEADER_H
 #define NR_RLC_HEADER_H
 #include <ns3/packet.h>
+#include "nr-rlc-sequence-number.h"
 
 namespace ns3 {
 const uint8_t SI_MASK = 0xc0;

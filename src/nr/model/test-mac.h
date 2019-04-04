@@ -27,6 +27,8 @@ public:
      */
   NrMacSapProvider *GetNrMacSapProvider (void);
 
+  virtual void DoSend();
+
 private:
   // forwarded from NrMacSapProvider
   void DoTransmitPdu (NrMacSapProvider::TransmitPduParameters);
@@ -34,6 +36,7 @@ private:
 
   NrMacSapProvider *m_macSapProvider;
   NrMacSapUser *m_macSapUser;
+  std::vector<Ptr<Packet>> m_buffer;
 };
 } // namespace ns3
 #endif

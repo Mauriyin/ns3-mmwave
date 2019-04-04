@@ -5,7 +5,7 @@ NS_LOG_COMPONENT_DEFINE ("NrRlcUmHeader");
 
 NS_OBJECT_ENSURE_REGISTERED (NrRlcUmHeader);
 
-NrRlcUmHeader::NrRlcUmHeader () : m_SN (0), m_SI (SI_UNKNOW), m_SO (0), m_type (PDU_UNKNOW)
+NrRlcUmHeader::NrRlcUmHeader () : m_SN (0), m_SO (0), m_SI (SI_UNKNOW), m_type (PDU_UNKNOW)
 {
 }
 NrRlcUmHeader::~NrRlcUmHeader (){
@@ -32,16 +32,16 @@ NrRlcUmHeader::GetSerializedSize (void) const
   switch (m_type)
     {
     case PDU_COMPLETE:
-    case SN6:
+    case PDU_SN6:
       headerLen = 1;
       break;
-    case SN12:
+    case PDU_SN12:
       headerLen = 2;
       break;
-    case SN6SO:
+    case PDU_SN6SO:
       headerLen = 3;
       break;
-    case SN12SO:
+    case PDU_SN12SO:
       headerLen = 4;
       break;
     default:
@@ -85,27 +85,27 @@ NrRlcUmHeader::Deserialize (Buffer::Iterator iter)
   switch (m_type)
     {
     case PDU_COMPLETE:
-      m_SI = (uint16_t) iter.ReadU8 ();
+      m_SI = (SIType_t) iter.ReadU8 ();
       return 1;
     case PDU_SN6:
       tmp = iter.ReadU8 ();
-      m_SI = tmp & SI_MASK;
+      m_SI = (SIType_t) (tmp & SI_MASK);
       m_SN = (uint16_t) (tmp & SN6_MASK);
       return 1;
     case PDU_SN12:
       tmp = iter.ReadU8 ();
-      m_SI = tmp & SI_MASK;
+      m_SI = (SIType_t) (tmp & SI_MASK);
       m_SN = (uint16_t) (tmp & SN6_MASK) << 8 | iter.ReadU8 ();
       return 2;
     case PDU_SN6SO:
       tmp = iter.ReadU8 ();
-      m_SI = tmp & SI_MASK;
+      m_SI = (SIType_t) (tmp & SI_MASK);
       m_SN = (uint16_t) (tmp & SN6_MASK);
       m_SO = iter.ReadU16 ();
       return 3;
     case PDU_SN12SO:
       tmp = iter.ReadU8 ();
-      m_SI = tmp & SI_MASK;
+      m_SI = (SIType_t) (tmp & SI_MASK);
       m_SN = (uint16_t) (tmp & SN6_MASK) << 8 | iter.ReadU8 ();
       m_SO = iter.ReadU16 ();
       return 4;
@@ -121,12 +121,14 @@ NrRlcUmHeader::Print (std::ostream &os) const
   os << "SI: " << m_SI << " ";
   switch (m_type)
     {
-    case SN6SO:
-    case SN12SO:
+    case PDU_SN6SO:
+    case PDU_SN12SO:
       os << "SO: " << m_SI << " ";
-    case SN6:
-    case SN12:
+    case PDU_SN6:
+    case PDU_SN12:
       os << "SN: " << m_SN << " ";
+    default:
+      break;
     }
 }
 

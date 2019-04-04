@@ -2,6 +2,7 @@
 #define NR_RLC_UM_H
 #include "nr-rlc.h"
 #include "nr-rlc-sequence-number.h"
+#include "nr-rlc-header.h"
 #include "ns3/timer.h"
 #include "ns3/packet.h"
 #include <map>
@@ -27,6 +28,7 @@ public:
   virtual void DoReceivePdu (Ptr<Packet> p);
 
   virtual void SetSnBitLength (uint8_t length);
+  virtual uint8_t GetSnBitLength (void) const;
   virtual void SetUmWindowSize (uint16_t size);
   virtual void SetTxBufferSize (uint32_t size);
 
@@ -34,17 +36,20 @@ private:
   void ExpireTimer (void);
   uint16_t m_windowSize;
   uint32_t m_maxTxBufferSize;
-  uint32_t m_TxBufferSize;
+  uint32_t m_txBufferSize;
+  uint8_t m_snBitLen;
 
   std::list<Ptr<Packet>> m_txBuffer;
   std::map<uint16_t, Ptr<Packet>> m_rxBuffer;
 
-  SequenceNumber m_TxNext;
-  SequenceNumber m_RxNextHighest;
-  SequenceNumber m_RxNextReassembly;
-  SequenceNumber m_RxTimerTrigger;
+  SequenceNumber m_txNext;
+  SequenceNumber m_rxNextHighest;
+  SequenceNumber m_rxNextReassembly;
+  SequenceNumber m_rxTimerTrigger;
 
   Timer m_tReassembly;
+
+  NrRlcUmHeader::PduType_t m_nextPduType;
 };
 } // namespace ns3
 
