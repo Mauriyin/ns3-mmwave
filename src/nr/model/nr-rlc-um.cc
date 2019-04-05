@@ -3,6 +3,59 @@
 #include "nr-rlc-pdu-tag.h"
 namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("NrRlcUm");
+
+NrRlcUmRxBuffer::NrRlcUmRxBuffer ()
+{
+  Clear ();
+}
+NrRlcUmRxBuffer::~NrRlcUmRxBuffer ()
+{
+}
+bool
+NrRlcUmRxBuffer::AddPacket (Ptr<Packet> p, uint16_t so)
+{
+  if (m_buffer.find (so) != m_buffer.end ())
+    {
+      return false;
+    }
+  m_buffer[so] = p;
+  m_currentLength += p->GetSize ();
+  return true;
+}
+bool
+NrRlcUmRxBuffer::AddLastPacket (Ptr<Packet> p, uint16_t so)
+{
+  if (m_buffer.find (so) != m_buffer.end ())
+    {
+      return false;
+    }
+  m_buffer[so] = p;
+  m_lengthWithoutLastSeq = so;
+  return true;
+}
+void
+NrRlcUmRxBuffer::Clear ()
+{
+  m_buffer.clear ();
+  m_lengthWithoutLastSeq = 0xffff;
+  m_currentLength = 0;
+}
+bool
+NrRlcUmRxBuffer::IsAll ()
+{
+  return (m_currentLength == m_lengthWithoutLastSeq);
+}
+Ptr<Packet>
+NrRlcUmRxBuffer::GetPacket ()
+{
+  Ptr<Packet> packet = Create<Packet> ();
+  for (auto iter = m_buffer.begin (); iter != m_buffer.end (); ++iter)
+    {
+      packet->AddAtEnd (iter->second);
+    }
+  return packet;
+}
+
 NS_OBJECT_ENSURE_REGISTERED (NrRlcUm);
 NrRlcUm::NrRlcUm () : m_txBufferSize (0), m_nextPduType (NrRlcUmHeader::PDU_COMPLETE)
 {
@@ -68,6 +121,7 @@ NrRlcUm::SetSnBitLength (uint8_t length)
     }
 
   m_snBitLen = length;
+  m_rxBuffer.resize (1 << length);
   m_txNext.SetMod (length);
   m_rxNextHighest.SetMod (length);
   m_rxNextReassembly.SetMod (length);
@@ -207,7 +261,9 @@ NrRlcUm::DoReceivePdu (Ptr<Packet> p)
   switch (si)
     {
     case NrRlcUmHeader::SI_ALL:
-      break;
+      p->RemoveHeader (header);
+      m_rlcSapUser->ReceivePdcpPdu (p);
+      return;
     case NrRlcUmHeader::SI_FIRST_SEG:
       header.SetHeaderType (m_PduTypeSN);
       break;
@@ -216,6 +272,79 @@ NrRlcUm::DoReceivePdu (Ptr<Packet> p)
       break;
     }
   p->RemoveHeader (header);
-  m_rlcSapUser->ReceivePdcpPdu (p);
+  std::cout << "### Header: " << header << std::endl;
+  SequenceNumber sn (header.GetSequenceNumber ());
+  uint16_t snValue = sn.GetValue ();
+  if (InDiscardWindow (sn))
+    {
+      return;
+    }
+  // std::map<uint16_t, NrRlcUmRxBuffer>::iterator iter = m_rxBuffer.find (snValue);
+  // if (iter == m_rxBuffer.end ())
+  //   {
+  //     m_rxBuffer[snValue].Clear ();
+  //     iter = m_rxBuffer.find (snValue);
+  //   }
+  // uint16_t so = header.GetSegmentOffset ();
+  // if (si != NrRlcUmHeader::SI_LAST_SEG)
+  //   {
+  //     iter->AddPacket (p, so);
+  //   }
+  // else
+  //   {
+  //     iter->AddLastPacket (p, so);
+  //   }
+  // if (iter->IsAll ())
+  //   {
+  //     m_rlcSapUser->ReceivePdcpPdu (iter->GetPacket ());
+  //     m_rxBuffer.erase (iter);
+  //   }
+  uint16_t so = header.GetSegmentOffset ();
+  if (si != NrRlcUmHeader::SI_LAST_SEG)
+    {
+      m_rxBuffer[snValue].AddPacket (p, so);
+    }
+  else
+    {
+      m_rxBuffer[snValue].AddLastPacket (p, so);
+    }
+  if (m_rxBuffer[snValue].IsAll ())
+    {
+      m_rlcSapUser->ReceivePdcpPdu (m_rxBuffer[snValue].GetPacket ());
+      m_rxBuffer[snValue].Clear ();
+      if (sn == m_rxNextReassembly)
+        {
+          m_rxNextReassembly = FindNext (sn + 1);
+        }
+    }
+}
+void
+NrRlcUm::ExpireTimer (void)
+{
+  NS_LOG_FUNCTION (this);
+}
+bool
+NrRlcUm::InWindow (SequenceNumber sn)
+{
+  NS_ASSERT_MSG (sn.GetMod () == m_snBitLen, "SN Type does not meet the requirement");
+  return (m_rxNextHighest - m_windowSize <= sn && sn < m_rxNextHighest);
+}
+bool
+NrRlcUm::InDiscardWindow (SequenceNumber sn)
+{
+  NS_ASSERT_MSG (sn.GetMod () == m_snBitLen, "SN Type does not meet the requirement");
+  return (m_rxNextHighest - m_windowSize <= sn && sn < m_rxNextReassembly);
+}
+SequenceNumber
+NrRlcUm::FindNext (SequenceNumber sn)
+{
+  while (true)
+    {
+      if (!m_rxBuffer[sn.GetValue ()].IsAll ())
+        {
+          return sn;
+        }
+      sn++;
+    }
 }
 } // namespace ns3

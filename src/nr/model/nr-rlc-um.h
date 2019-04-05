@@ -7,6 +7,22 @@
 #include "ns3/packet.h"
 #include <map>
 namespace ns3 {
+class NrRlcUmRxBuffer
+{
+  std::map<uint16_t, Ptr<Packet>> m_buffer;
+  uint16_t m_lengthWithoutLastSeq;
+  uint16_t m_currentLength;
+
+public:
+  NrRlcUmRxBuffer ();
+  ~NrRlcUmRxBuffer ();
+  bool AddPacket (Ptr<Packet> p, uint16_t so);
+  bool AddLastPacket (Ptr<Packet> p, uint16_t so);
+  void Clear ();
+  bool IsAll ();
+  Ptr<Packet> GetPacket ();
+};
+
 class NrRlcUm : public NrRlc
 {
 public:
@@ -27,20 +43,24 @@ public:
   virtual void DoNotifyHarqDeliveryFailure ();
   virtual void DoReceivePdu (Ptr<Packet> p);
 
-  virtual void SetSnBitLength (uint8_t length);
-  virtual uint8_t GetSnBitLength (void) const;
-  virtual void SetUmWindowSize (uint16_t size);
-  virtual void SetTxBufferSize (uint32_t size);
+  void SetSnBitLength (uint8_t length);
+  uint8_t GetSnBitLength (void) const;
+  void SetUmWindowSize (uint16_t size);
+  void SetTxBufferSize (uint32_t size);
 
 private:
   void ExpireTimer (void);
+  bool InWindow (SequenceNumber sn);
+  bool InDiscardWindow (SequenceNumber sn);
+  SequenceNumber FindNext (SequenceNumber sn);
   uint16_t m_windowSize;
   uint32_t m_maxTxBufferSize;
   uint32_t m_txBufferSize;
   uint8_t m_snBitLen;
 
   std::list<Ptr<Packet>> m_txBuffer;
-  std::map<uint16_t, Ptr<Packet>> m_rxBuffer;
+  // std::map<uint16_t, NrRlcUmRxBuffer> m_rxBuffer;
+  std::vector<NrRlcUmRxBuffer> m_rxBuffer;
 
   SequenceNumber m_txNext;
   SequenceNumber m_rxNextHighest;

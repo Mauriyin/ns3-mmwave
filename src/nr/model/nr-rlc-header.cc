@@ -123,7 +123,7 @@ NrRlcUmHeader::Print (std::ostream &os) const
     {
     case PDU_SN6SO:
     case PDU_SN12SO:
-      os << "SO: " << m_SI << " ";
+      os << "SO: " << m_SO << " ";
     case PDU_SN6:
     case PDU_SN12:
       os << "SN: " << m_SN << " ";
@@ -137,6 +137,11 @@ NrRlcUmHeader::SetHeaderType (PduType_t type)
 {
   NS_LOG_FUNCTION (this << type);
   m_type = type;
+}
+NrRlcUmHeader::PduType_t
+NrRlcUmHeader::GetHeaderType () const
+{
+  return m_type;
 }
 void
 NrRlcUmHeader::SetSequenceNumber (SequenceNumber sn)

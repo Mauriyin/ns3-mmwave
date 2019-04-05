@@ -68,14 +68,15 @@ NrTestCase1::DoRun (void)
   txRlc->SetNrMacSapProvider (txMac->GetNrMacSapProvider ());
   txMac->SetNrMacSapUser (txRlc->GetNrMacSapUser ());
   txPdcp->SendData (Seconds (0), "abcdefghijklmnopqrstuvwxyz");
-  txMac->SendTxOpportunity (Seconds (0.1), 26);
-  txMac->SendTxOpportunity (Seconds (0.15), 6);
   txPdcp->SendData (Seconds (0.1), "0123456789");
+  txMac->SendTxOpportunity (Seconds (0.11), 20);
+  txMac->SendTxOpportunity (Seconds (0.11), 10);
+  txMac->SendTxOpportunity (Seconds (0.15), 8);
   txMac->DoSend (Seconds (0.2));
   txMac->SendTxOpportunity (Seconds (0.3), 7);
   txMac->DoSend (Seconds (0.4));
   txMac->SendTxOpportunity (Seconds (0.5), 7);
-  txMac->SendTxOpportunity (Seconds (0.55), 7);
+  //txMac->SendTxOpportunity (Seconds (0.55), 7);
   txMac->DoSend (Seconds (0.6));
 
   Simulator::Run ();

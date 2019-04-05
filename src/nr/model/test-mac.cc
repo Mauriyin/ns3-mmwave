@@ -58,12 +58,12 @@ void NrTestMac::DoReportBufferStatus (NrMacSapProvider::ReportBufferStatusParame
 void
 NrTestMac::DoSend (Time tm)
 {
-  NS_LOG_FUNCTION (this);
   Simulator::Schedule (tm, &NrTestMac::SendAll, this);
 }
 void
 NrTestMac::SendAll ()
 {
+  NS_LOG_FUNCTION (this);
   for (auto each : m_buffer)
     {
       Simulator::ScheduleNow (&NrMacSapUser::ReceivePdu, m_macSapUser, each);

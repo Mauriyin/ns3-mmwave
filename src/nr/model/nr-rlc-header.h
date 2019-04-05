@@ -37,6 +37,7 @@ public:
   virtual void Print (std::ostream &os) const;
 
   virtual void SetHeaderType (PduType_t type);
+  virtual PduType_t GetHeaderType () const;
   virtual void SetSequenceNumber (SequenceNumber sn);
   virtual SequenceNumber GetSequenceNumber () const;
   virtual void SetSegmentationInfo (SIType_t si);
