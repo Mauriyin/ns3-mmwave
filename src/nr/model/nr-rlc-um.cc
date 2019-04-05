@@ -55,7 +55,7 @@ NrRlcUmRxBuffer::GetPacket ()
     }
   return packet;
 }
-
+//////////////////////////////////////////////////////////////////////
 NS_OBJECT_ENSURE_REGISTERED (NrRlcUm);
 NrRlcUm::NrRlcUm () : m_txBufferSize (0), m_nextPduType (NrRlcUmHeader::PDU_COMPLETE)
 {
@@ -82,7 +82,9 @@ NrRlcUm::GetTypeId (void)
                          MakeUintegerChecker<uint8_t> (6, 12))
           .AddAttribute ("WindowSize", "UM_Window_Size", UintegerValue (1 << 11),
                          MakeUintegerAccessor (&NrRlcUm::m_windowSize),
-                         MakeUintegerChecker<uint16_t> ());
+                         MakeUintegerChecker<uint16_t> ())
+          .AddAttribute ("ReassemblyTime", "Timer Reassembly Time", TimeValue (Seconds (1)),
+                         MakeTimeAccessor (&NrRlcUm::m_reassemblyDelay), MakeTimeChecker ());
   return tid;
 }
 void
@@ -174,6 +176,7 @@ NrRlcUm::DoNotifyTxOpportunity (uint32_t bytes, uint8_t layer, uint8_t harqId)
     {
       Ptr<Packet> packet = m_txBuffer.front ();
       m_txBuffer.pop_front ();
+      m_txBufferSize -= packet->GetSize ();
       if (packet->GetSize () <= lastBytes)
         {
           NS_LOG_LOGIC ("CASE 1");
@@ -189,7 +192,6 @@ NrRlcUm::DoNotifyTxOpportunity (uint32_t bytes, uint8_t layer, uint8_t harqId)
           NrRlcUmHeader header;
           header.SetHeaderType (m_nextPduType);
           packet->RemoveHeader (header);
-          std::cout << header << " " << packet->GetSize () << std::endl;
           NrRlcUmHeader NewHeader;
           Ptr<Packet> tmpPacket;
           if (m_nextPduType == NrRlcUmHeader::PDU_COMPLETE)
@@ -202,6 +204,7 @@ NrRlcUm::DoNotifyTxOpportunity (uint32_t bytes, uint8_t layer, uint8_t harqId)
                 {
                   packet->AddHeader (header);
                   m_txBuffer.push_front (packet);
+                  m_txBufferSize += packet->GetSize ();
                   break;
                 }
               lastBytes -= NewHeader.GetSerializedSize ();
@@ -223,6 +226,7 @@ NrRlcUm::DoNotifyTxOpportunity (uint32_t bytes, uint8_t layer, uint8_t harqId)
                 {
                   packet->AddHeader (header);
                   m_txBuffer.push_front (packet);
+                  m_txBufferSize += packet->GetSize ();
                   break;
                 }
               lastBytes -= NewHeader.GetSerializedSize ();
@@ -233,12 +237,12 @@ NrRlcUm::DoNotifyTxOpportunity (uint32_t bytes, uint8_t layer, uint8_t harqId)
             {
               NS_ABORT_MSG ("Next Pdu Type Error");
             }
-
           tmpPacket = packet->CreateFragment (0, lastBytes);
           tmpPacket->AddHeader (NewHeader);
           packet->RemoveAtStart (lastBytes);
           packet->AddHeader (header);
           m_txBuffer.push_front (packet);
+          m_txBufferSize += packet->GetSize ();
           params.pdu = tmpPacket;
           m_macSapProvider->TransmitPdu (params);
           lastBytes = 0;
@@ -272,33 +276,12 @@ NrRlcUm::DoReceivePdu (Ptr<Packet> p)
       break;
     }
   p->RemoveHeader (header);
-  std::cout << "### Header: " << header << std::endl;
   SequenceNumber sn (header.GetSequenceNumber ());
-  uint16_t snValue = sn.GetValue ();
   if (InDiscardWindow (sn))
     {
       return;
     }
-  // std::map<uint16_t, NrRlcUmRxBuffer>::iterator iter = m_rxBuffer.find (snValue);
-  // if (iter == m_rxBuffer.end ())
-  //   {
-  //     m_rxBuffer[snValue].Clear ();
-  //     iter = m_rxBuffer.find (snValue);
-  //   }
-  // uint16_t so = header.GetSegmentOffset ();
-  // if (si != NrRlcUmHeader::SI_LAST_SEG)
-  //   {
-  //     iter->AddPacket (p, so);
-  //   }
-  // else
-  //   {
-  //     iter->AddLastPacket (p, so);
-  //   }
-  // if (iter->IsAll ())
-  //   {
-  //     m_rlcSapUser->ReceivePdcpPdu (iter->GetPacket ());
-  //     m_rxBuffer.erase (iter);
-  //   }
+  uint16_t snValue = sn.GetValue ();
   uint16_t so = header.GetSegmentOffset ();
   if (si != NrRlcUmHeader::SI_LAST_SEG)
     {
@@ -311,29 +294,90 @@ NrRlcUm::DoReceivePdu (Ptr<Packet> p)
   if (m_rxBuffer[snValue].IsAll ())
     {
       m_rlcSapUser->ReceivePdcpPdu (m_rxBuffer[snValue].GetPacket ());
-      m_rxBuffer[snValue].Clear ();
+      // m_rxBuffer[snValue].Clear ();
       if (sn == m_rxNextReassembly)
         {
-          m_rxNextReassembly = FindNext (sn + 1);
+          m_rxNextReassembly = FindNext (m_rxNextReassembly + 1);
         }
     }
+  else if (!InWindow (sn))
+    {
+      uint32_t delta = sn + 1 - m_rxNextHighest;
+      m_rxNextHighest = sn + 1;
+      DiscardNFrom (m_rxNextHighest - m_windowSize, delta);
+      if (!InWindow (m_rxNextReassembly))
+        {
+          m_rxNextReassembly = FindNext (m_rxNextHighest - m_windowSize);
+        }
+    }
+  if (m_tReassembly.IsRunning ())
+    {
+      if (m_rxNextReassembly - m_rxTimerTrigger < m_windowSize ||
+          !InWindow (m_rxTimerTrigger) && m_rxTimerTrigger != m_rxNextHighest ||
+          m_rxNextReassembly + 1 == m_rxNextHighest &&
+              m_rxBuffer[m_rxNextReassembly.GetValue ()].IsAll ())
+        {
+          m_tReassembly.Cancel ();
+        }
+    }
+  else
+    {
+      CheckAndOpenTimer ();
+    }
+}
+void
+NrRlcUm::SetupTimer (void)
+{
+  m_tReassembly.Cancel ();
+  m_tReassembly = Timer (Timer::CANCEL_ON_DESTROY);
+  m_tReassembly.SetFunction (&NrRlcUm::ExpireTimer, this);
+  m_tReassembly.SetDelay (m_reassemblyDelay);
 }
 void
 NrRlcUm::ExpireTimer (void)
 {
   NS_LOG_FUNCTION (this);
+  SequenceNumber old = m_rxNextReassembly;
+  m_rxNextReassembly = FindNext (m_rxTimerTrigger);
+  DiscardNFrom (m_rxNextReassembly, m_rxNextReassembly - old);
+  CheckAndOpenTimer ();
+}
+void
+NrRlcUm::CheckAndOpenTimer (void)
+{
+  if (m_rxNextReassembly + 1 - m_rxNextHighest > 0 &&
+          m_rxNextReassembly + 1 - m_rxNextHighest < m_windowSize ||
+      m_rxNextReassembly + 1 == m_rxNextHighest &&
+          !m_rxBuffer[m_rxNextReassembly.GetValue ()].IsAll ())
+    {
+      SetupTimer ();
+      m_tReassembly.Schedule ();
+      m_rxTimerTrigger = m_rxNextHighest;
+    }
 }
 bool
 NrRlcUm::InWindow (SequenceNumber sn)
 {
   NS_ASSERT_MSG (sn.GetMod () == m_snBitLen, "SN Type does not meet the requirement");
-  return (m_rxNextHighest - m_windowSize <= sn && sn < m_rxNextHighest);
+  return (sn - (m_rxNextHighest - m_windowSize) < m_windowSize && sn != m_rxNextHighest &&
+          m_rxNextHighest - sn < m_windowSize);
 }
 bool
 NrRlcUm::InDiscardWindow (SequenceNumber sn)
 {
   NS_ASSERT_MSG (sn.GetMod () == m_snBitLen, "SN Type does not meet the requirement");
-  return (m_rxNextHighest - m_windowSize <= sn && sn < m_rxNextReassembly);
+  return (sn - (m_rxNextHighest - m_windowSize) < m_windowSize && sn != m_rxNextReassembly &&
+          m_rxNextReassembly - sn < m_windowSize);
+}
+void
+NrRlcUm::DiscardNFrom (SequenceNumber iter, uint16_t n)
+{
+  while (n > 0)
+    {
+      --iter;
+      --n;
+      m_rxBuffer[iter.GetValue ()].Clear ();
+    }
 }
 SequenceNumber
 NrRlcUm::FindNext (SequenceNumber sn)
@@ -344,7 +388,7 @@ NrRlcUm::FindNext (SequenceNumber sn)
         {
           return sn;
         }
-      sn++;
+      ++sn;
     }
 }
 } // namespace ns3

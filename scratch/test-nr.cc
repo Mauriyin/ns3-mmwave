@@ -21,10 +21,13 @@ public:
   virtual ~NrTestCase1 ();
 
   virtual void DoRun (void);
-  virtual void Recv (void);
+  virtual std::string GenPacket (uint16_t);
+  void checkRecv ();
   Ptr<NrTestPdcp> txPdcp;
   Ptr<NrRlc> txRlc;
   Ptr<NrTestMac> txMac;
+  std::string m_recv;
+  uint32_t m_sendLen;
 };
 
 // Add some help text to this case to describe what it is intended to test
@@ -45,9 +48,11 @@ NrTestCase1::~NrTestCase1 ()
 void
 NrTestCase1::DoRun (void)
 {
-  LogComponentEnable ("NrRlcUm", LOG_LEVEL_ALL);
-  LogComponentEnable ("TESTMAC", LOG_LEVEL_ALL);
-  LogComponentEnable ("TESTPDCP", LOG_LEVEL_ALL);
+  // LogComponentEnable ("NrRlcUm", LOG_LEVEL_ALL);
+  // LogComponentEnable ("TESTMAC", LOG_LEVEL_ALL);
+  // LogComponentEnable ("TESTPDCP", LOG_LEVEL_ALL);
+
+  srand (time (0));
 
   uint16_t rnti = 1111;
   uint8_t lcid = 222;
@@ -67,27 +72,72 @@ NrTestCase1::DoRun (void)
 
   txRlc->SetNrMacSapProvider (txMac->GetNrMacSapProvider ());
   txMac->SetNrMacSapUser (txRlc->GetNrMacSapUser ());
-  txPdcp->SendData (Seconds (0), "abcdefghijklmnopqrstuvwxyz");
-  txPdcp->SendData (Seconds (0.1), "0123456789");
-  txMac->SendTxOpportunity (Seconds (0.11), 20);
-  txMac->SendTxOpportunity (Seconds (0.11), 10);
-  txMac->SendTxOpportunity (Seconds (0.15), 8);
-  txMac->DoSend (Seconds (0.2));
-  txMac->SendTxOpportunity (Seconds (0.3), 7);
-  txMac->DoSend (Seconds (0.4));
-  txMac->SendTxOpportunity (Seconds (0.5), 7);
-  //txMac->SendTxOpportunity (Seconds (0.55), 7);
-  txMac->DoSend (Seconds (0.6));
 
+  // txPdcp->SendData (Seconds (0), "abcdefghijklmnopqrstuvwxyz");
+  // txPdcp->SendData (Seconds (0.1), "0123456789");
+  // txMac->SendTxOpportunity (Seconds (0.11), 20);
+  // txMac->DoSend (Seconds (0.2));
+  // txMac->SendTxOpportunity (Seconds (0.21), 10);
+  // txMac->SendTxOpportunity (Seconds (0.25), 8);
+  // txMac->SendTxOpportunity (Seconds (0.3), 7);
+  // txMac->DoSend (Seconds (2));
+  // txMac->SendTxOpportunity (Seconds (2.5), 7);
+  // //txMac->SendTxOpportunity (Seconds (0.55), 7);
+  // txMac->SendTxOpportunity (Seconds (2.7), 7);
+  // txMac->DoSend (Seconds (3));
+
+  m_sendLen = 0;
+  for (int i = 0; i < 100000; ++i)
+    {
+      int tmp = 128 + (rand () % 20 - 14);
+      m_sendLen += tmp;
+      txPdcp->SendData (Seconds (i / 100.0), GenPacket (tmp));
+      if (i % 3 == 2)
+        {
+          txMac->SendTxOpportunity (Seconds (i / 100.0 + 0.0050), 128);
+          txMac->SendTxOpportunity (Seconds (i / 100.0 + 0.0051), 64);
+          txMac->SendTxOpportunity (Seconds (i / 100.0 + 0.0052), 128 * 2);
+        }
+    }
+  txMac->SendTxOpportunity (Seconds (9997), 10240);
+  txMac->DoSend (Seconds (9998));
+  Simulator::Schedule (Seconds (9999), &NrTestCase1::checkRecv, this);
   Simulator::Run ();
-  Simulator::Stop (Seconds (5));
+  Simulator::Stop (Seconds (10000));
   Simulator::Destroy ();
 }
-void
-NrTestCase1::Recv (void)
+
+std::string
+NrTestCase1::GenPacket (uint16_t len)
 {
-  std::string ret = txPdcp->GetDataReceived ();
-  std::cout << ret << std::endl;
+  static int index;
+  std::string ret;
+  while (len > 0)
+    {
+      --len;
+      ret += (char) ('A' + index++ % 26);
+    }
+  return ret;
+}
+void
+NrTestCase1::checkRecv ()
+{
+  m_recv = txPdcp->GetDataReceived ();
+  std::cout << "Send Length: " << m_sendLen << std::endl;
+  std::cout << "Recv Length: " << m_recv.length () << std::endl;
+  for (std::__cxx11::basic_string<char>::size_type i = 0; i < m_recv.length (); i += 26 * 100 + 1)
+    std::cout << m_recv[i];
+  int index = 0;
+  for (std::__cxx11::basic_string<char>::size_type i = 0; i < m_recv.length (); ++i)
+    {
+      if (m_recv[i] != (char) ('A' + index++ % 26))
+        {
+          std::cout << std::endl << i << std::endl;
+          puts ("ERROR");
+          break;
+        }
+    }
+  puts ("");
 }
 
 int

@@ -74,6 +74,28 @@ public:
   }
 
   SequenceNumber
+  operator++ ()
+  {
+    m_value = (m_value + 1) & m_modulusMask;
+    return *this;
+  }
+
+  SequenceNumber
+  operator-- (int)
+  {
+    SequenceNumber retval (*this);
+    m_value = (m_value + m_modulusMask) & m_modulusMask;
+    return retval;
+  }
+
+  SequenceNumber
+  operator-- ()
+  {
+    m_value = (m_value + m_modulusMask) & m_modulusMask;
+    return *this;
+  }
+
+  SequenceNumber
   operator+ (uint32_t delta) const
   {
     return SequenceNumber (m_value + delta, m_modBitLen);
@@ -138,6 +160,137 @@ private:
   uint32_t m_modulusMask;
 };
 
+/////////////////////////////////////////////////////////////
+class SequenceNumber12
+{
+public:
+  SequenceNumber12 ()
+  {
+    m_modulusMask = (1 << 12) - 1;
+    m_value = m_modulusMask + 1;
+  }
+
+  explicit SequenceNumber12 (uint16_t value)
+  {
+    m_modulusMask = (1 << 12) - 1;
+    if (value < m_modulusMask + 1)
+      m_value = value + m_modulusMask + 1;
+    else
+      m_value = value;
+  }
+
+  SequenceNumber12 (SequenceNumber12 const &oth)
+      : m_value (oth.m_value), m_modulusMask (oth.m_modulusMask)
+  {
+  }
+
+  SequenceNumber12 &
+  operator= (uint16_t value)
+  {
+    if (value < m_modulusMask + 1)
+      m_value = value + m_modulusMask + 1;
+    else
+      m_value = value;
+    return *this;
+  }
+
+  uint16_t
+  GetValue () const
+  {
+    return m_value & m_modulusMask;
+  }
+
+  SequenceNumber12
+  operator++ (int)
+  {
+    SequenceNumber12 retval (*this);
+    ++m_value;
+    return retval;
+  }
+
+  SequenceNumber12
+  operator++ ()
+  {
+    ++m_value;
+    return *this;
+  }
+
+  SequenceNumber12
+  operator-- (int)
+  {
+    SequenceNumber12 retval (*this);
+    --m_value;
+    return retval;
+  }
+
+  SequenceNumber12
+  operator-- ()
+  {
+    --m_value;
+    return *this;
+  }
+
+  SequenceNumber12
+  operator+ (uint16_t delta) const
+  {
+    return SequenceNumber12 (m_value + delta);
+  }
+
+  SequenceNumber12
+  operator- (uint16_t delta) const
+  {
+    return SequenceNumber12 (m_value - delta);
+  }
+
+  uint16_t
+  operator- (const SequenceNumber12 &other) const
+  {
+    NS_ASSERT_MSG (m_value >= other.m_value, "Sequence number diff < 0");
+    return (m_value - other.m_value) & m_modulusMask;
+  }
+
+  bool
+  operator> (const SequenceNumber12 &other) const
+  {
+    return (m_value > other.m_value);
+  }
+
+  bool
+  operator== (const SequenceNumber12 &other) const
+  {
+    return (m_value == other.m_value);
+  }
+
+  bool
+  operator!= (const SequenceNumber12 &other) const
+  {
+    return (m_value != other.m_value);
+  }
+
+  bool
+  operator<= (const SequenceNumber12 &other) const
+  {
+    return (m_value <= other.m_value);
+  }
+
+  bool
+  operator>= (const SequenceNumber12 &other) const
+  {
+    return (m_value >= other.m_value);
+  }
+
+  bool
+  operator< (const SequenceNumber12 &other) const
+  {
+    return (m_value < other.m_value);
+  }
+
+  friend std::ostream &operator<< (std::ostream &os, const SequenceNumber12 &val);
+
+private:
+  uint32_t m_value;
+  uint32_t m_modulusMask;
+};
 } // namespace ns3
 
 #endif // NR_RLC_SEQUENCE_NUMBER_H

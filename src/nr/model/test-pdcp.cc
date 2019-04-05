@@ -68,9 +68,9 @@ NrTestPdcp::DoReceivePdcpPdu (Ptr<Packet> p)
   uint32_t dataLen = p->GetSize ();
   uint8_t *buf = new uint8_t[dataLen];
   p->CopyData (buf, dataLen);
-  m_receivedData = std::string ((char *) buf, dataLen);
+  m_receivedData += std::string ((char *) buf, dataLen);
 
-  NS_LOG_LOGIC ("@@@ Recv: "+m_receivedData);
+  NS_LOG_LOGIC ("@@@ Recv: " + std::string ((char *) buf, dataLen));
 
   delete[] buf;
 }

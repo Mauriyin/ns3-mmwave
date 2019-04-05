@@ -85,7 +85,7 @@ NrRlcUmHeader::Deserialize (Buffer::Iterator iter)
   switch (m_type)
     {
     case PDU_COMPLETE:
-      m_SI = (SIType_t) iter.ReadU8 ();
+      m_SI = (SIType_t) (iter.ReadU8 () & SI_MASK);
       return 1;
     case PDU_SN6:
       tmp = iter.ReadU8 ();

@@ -8,4 +8,9 @@ std::ostream &operator<<(std::ostream &os, const SequenceNumber &val)
     return os;
 }
 
+std::ostream &operator<<(std::ostream &os, const SequenceNumber12 &val)
+{
+    os << val.m_value;
+    return os;
+}
 } // namespace ns3

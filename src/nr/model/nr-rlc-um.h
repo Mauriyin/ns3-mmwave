@@ -49,9 +49,12 @@ public:
   void SetTxBufferSize (uint32_t size);
 
 private:
+  void SetupTimer (void);
   void ExpireTimer (void);
+  void CheckAndOpenTimer (void);
   bool InWindow (SequenceNumber sn);
   bool InDiscardWindow (SequenceNumber sn);
+  void DiscardNFrom (SequenceNumber iter, uint16_t n);
   SequenceNumber FindNext (SequenceNumber sn);
   uint16_t m_windowSize;
   uint32_t m_maxTxBufferSize;
@@ -68,11 +71,13 @@ private:
   SequenceNumber m_rxTimerTrigger;
 
   Timer m_tReassembly;
+  Time m_reassemblyDelay;
 
   NrRlcUmHeader::PduType_t m_nextPduType;
   NrRlcUmHeader::PduType_t m_PduTypeSN;
   NrRlcUmHeader::PduType_t m_PduTypeSNSO;
 };
+
 } // namespace ns3
 
 #endif
