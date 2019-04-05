@@ -50,6 +50,8 @@ private:
   Timer m_tReassembly;
 
   NrRlcUmHeader::PduType_t m_nextPduType;
+  NrRlcUmHeader::PduType_t m_PduTypeSN;
+  NrRlcUmHeader::PduType_t m_PduTypeSNSO;
 };
 } // namespace ns3
 

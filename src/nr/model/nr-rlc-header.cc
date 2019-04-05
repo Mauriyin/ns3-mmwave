@@ -144,16 +144,43 @@ NrRlcUmHeader::SetSequenceNumber (SequenceNumber sn)
   NS_LOG_FUNCTION (this << sn);
   m_SN = sn.GetValue ();
 }
+SequenceNumber
+NrRlcUmHeader::GetSequenceNumber () const
+{
+  switch (m_type)
+    {
+    case PDU_SN6:
+    case PDU_SN6SO:
+      return SequenceNumber (m_SN, 6);
+    case PDU_SN12:
+    case PDU_SN12SO:
+      return SequenceNumber (m_SN, 12);
+
+    default:
+      NS_ABORT_MSG ("Try to get sequence number failed");
+      return SequenceNumber ();
+    }
+}
 void
 NrRlcUmHeader::SetSegmentationInfo (SIType_t si)
 {
   NS_LOG_FUNCTION (this << si);
   m_SI = si;
 }
+NrRlcUmHeader::SIType_t
+NrRlcUmHeader::GetSegmentationInfo () const
+{
+  return m_SI;
+}
 void
 NrRlcUmHeader::SetSegmentOffset (uint32_t so)
 {
   NS_LOG_FUNCTION (this << so);
   m_SO = so;
+}
+uint32_t
+NrRlcUmHeader::GetSegmentOffset () const
+{
+  return m_SO;
 }
 } // namespace ns3

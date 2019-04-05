@@ -63,18 +63,28 @@ NrTestCase1::DoRun (void)
   txRlc->SetNrMacSapProvider (txMac->GetNrMacSapProvider ());
   txMac->SetNrMacSapUser (txRlc->GetNrMacSapUser ());
   txPdcp->SendData (Seconds (0), "abcdefghijklmnopqrstuvwxyz");
-  txMac->SendTxOpportunity (Seconds (0.1), 128);
+  txMac->SendTxOpportunity (Seconds (0.1), 26);
+  txMac->SendTxOpportunity (Seconds (0.15), 6);
+  txPdcp->SendData (Seconds (0.1), "0123456789");
+  txMac->DoSend (Seconds (0.2));
+  txMac->SendTxOpportunity (Seconds (0.3), 5);
+  txMac->DoSend (Seconds (0.4));
+  txMac->SendTxOpportunity (Seconds (0.5), 7);
+  txMac->SendTxOpportunity (Seconds (0.55), 5);
+  txMac->DoSend (Seconds (0.6));
+
 
   Simulator::Schedule (Seconds (1), &NrTestCase1::Recv, this);
 
   Simulator::Run ();
   Simulator::Stop (Seconds (5));
+  Simulator::Destroy ();
 }
 void
 NrTestCase1::Recv (void)
 {
   std::string ret = txPdcp->GetDataReceived ();
-  std::cout << ret;
+  std::cout << ret << std::endl;
 }
 
 int

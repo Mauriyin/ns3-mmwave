@@ -38,8 +38,11 @@ public:
 
   virtual void SetHeaderType (PduType_t type);
   virtual void SetSequenceNumber (SequenceNumber sn);
+  virtual SequenceNumber GetSequenceNumber () const;
   virtual void SetSegmentationInfo (SIType_t si);
+  virtual SIType_t GetSegmentationInfo () const;
   virtual void SetSegmentOffset (uint32_t so);
+  virtual uint32_t GetSegmentOffset () const;
 
 private:
   uint16_t m_SN;

@@ -48,6 +48,7 @@ NrTestMac::GetNrMacSapProvider (void)
 void
 NrTestMac::DoTransmitPdu (NrMacSapProvider::TransmitPduParameters params)
 {
+  puts ("DoTransmitPdu");
   NS_LOG_FUNCTION (this);
   m_buffer.push_back (params.pdu->Copy ());
 }
@@ -56,11 +57,20 @@ void NrTestMac::DoReportBufferStatus (NrMacSapProvider::ReportBufferStatusParame
   NS_LOG_FUNCTION (this);
 }
 void
-NrTestMac::DoSend ()
+NrTestMac::DoSend (Time tm)
 {
+  puts ("DoSend");
   NS_LOG_FUNCTION (this);
+  Simulator::Schedule (tm, &NrTestMac::SendAll, this);
+}
+void
+NrTestMac::SendAll ()
+{
+  puts ("SendAll");
   for (auto each : m_buffer)
-    Simulator::ScheduleNow (&NrMacSapUser::ReceivePdu, m_macSapUser, each);
+    {
+      Simulator::ScheduleNow (&NrMacSapUser::ReceivePdu, m_macSapUser, each);
+    }
   m_buffer.clear ();
 }
 } // namespace ns3

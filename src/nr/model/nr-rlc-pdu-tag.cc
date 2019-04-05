@@ -20,18 +20,31 @@ NrRlcPduTag::GetInstanceTypeId (void) const
 uint32_t
 NrRlcPduTag::GetSerializedSize (void) const
 {
-  return 0;
+  return 1;
 }
 void
-NrRlcPduTag::Serialize (TagBuffer i) const
+NrRlcPduTag::Serialize (TagBuffer iter) const
 {
+  iter.WriteU8 (m_type);
 }
 void
-NrRlcPduTag::Deserialize (TagBuffer i)
+NrRlcPduTag::Deserialize (TagBuffer iter)
 {
+  m_type = iter.ReadU8 ();
 }
 void
 NrRlcPduTag::Print (std::ostream &os) const
 {
+  os << m_type;
+}
+void
+NrRlcPduTag::SetPduType (uint8_t type)
+{
+  m_type = type;
+}
+uint8_t
+NrRlcPduTag::GetPduType () const
+{
+  return m_type;
 }
 } // namespace ns3

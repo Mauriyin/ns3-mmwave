@@ -27,9 +27,10 @@ public:
      */
   NrMacSapProvider *GetNrMacSapProvider (void);
 
-  virtual void DoSend();
+  virtual void DoSend(Time tm);
 
 private:
+  virtual void SendAll();
   // forwarded from NrMacSapProvider
   void DoTransmitPdu (NrMacSapProvider::TransmitPduParameters);
   void DoReportBufferStatus (NrMacSapProvider::ReportBufferStatusParameters);
