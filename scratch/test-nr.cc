@@ -7,6 +7,7 @@
 
 // An essential include is test.h
 #include "ns3/test.h"
+#include "ns3/log.h"
 
 // Do not put your test classes in namespace ns3.  You may find it useful
 // to use the using directive to access the ns3 namespace directly
@@ -44,6 +45,10 @@ NrTestCase1::~NrTestCase1 ()
 void
 NrTestCase1::DoRun (void)
 {
+  LogComponentEnable ("NrRlcUm", LOG_LEVEL_ALL);
+  LogComponentEnable ("TESTMAC", LOG_LEVEL_ALL);
+  LogComponentEnable ("TESTPDCP", LOG_LEVEL_ALL);
+
   uint16_t rnti = 1111;
   uint8_t lcid = 222;
 
@@ -67,14 +72,11 @@ NrTestCase1::DoRun (void)
   txMac->SendTxOpportunity (Seconds (0.15), 6);
   txPdcp->SendData (Seconds (0.1), "0123456789");
   txMac->DoSend (Seconds (0.2));
-  txMac->SendTxOpportunity (Seconds (0.3), 5);
+  txMac->SendTxOpportunity (Seconds (0.3), 7);
   txMac->DoSend (Seconds (0.4));
   txMac->SendTxOpportunity (Seconds (0.5), 7);
-  txMac->SendTxOpportunity (Seconds (0.55), 5);
+  txMac->SendTxOpportunity (Seconds (0.55), 7);
   txMac->DoSend (Seconds (0.6));
-
-
-  Simulator::Schedule (Seconds (1), &NrTestCase1::Recv, this);
 
   Simulator::Run ();
   Simulator::Stop (Seconds (5));

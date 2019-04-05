@@ -95,7 +95,6 @@ NrRlcUm::SetTxBufferSize (uint32_t size)
 void
 NrRlcUm::DoTransmitPdcpPdu (Ptr<Packet> p)
 {
-  puts ("DoTransmitPdcpPdu");
   NS_LOG_FUNCTION (this << (uint32_t) m_rnti << (uint32_t) m_lcid << p->GetSize ());
   if (m_txBufferSize + p->GetSize () <= m_maxTxBufferSize)
     {
@@ -110,7 +109,6 @@ NrRlcUm::DoTransmitPdcpPdu (Ptr<Packet> p)
 void
 NrRlcUm::DoNotifyTxOpportunity (uint32_t bytes, uint8_t layer, uint8_t harqId)
 {
-  puts ("DoNotifyTxOpportunity");
   NS_LOG_FUNCTION (this << (uint32_t) m_rnti << (uint32_t) m_lcid << bytes);
   NrMacSapProvider::TransmitPduParameters params;
   params.rnti = m_rnti;
@@ -124,15 +122,16 @@ NrRlcUm::DoNotifyTxOpportunity (uint32_t bytes, uint8_t layer, uint8_t harqId)
       m_txBuffer.pop_front ();
       if (packet->GetSize () <= lastBytes)
         {
-          puts ("CASE 1");
+          NS_LOG_LOGIC ("CASE 1");
           params.pdu = packet;
           m_macSapProvider->TransmitPdu (params);
           lastBytes -= packet->GetSize ();
+          m_nextPduType = NrRlcUmHeader::PDU_COMPLETE;
           continue;
         }
       else
         {
-          puts ("CASE 2");
+          NS_LOG_LOGIC ("CASE 2");
           NrRlcUmHeader header;
           header.SetHeaderType (m_nextPduType);
           packet->RemoveHeader (header);
@@ -141,7 +140,7 @@ NrRlcUm::DoNotifyTxOpportunity (uint32_t bytes, uint8_t layer, uint8_t harqId)
           Ptr<Packet> tmpPacket;
           if (m_nextPduType == NrRlcUmHeader::PDU_COMPLETE)
             {
-              puts ("CASE 2.1");
+              NS_LOG_LOGIC ("CASE 2.1");
               NewHeader.SetHeaderType (m_PduTypeSN);
               NewHeader.SetSegmentationInfo (NrRlcUmHeader::SI_FIRST_SEG);
               NewHeader.SetSequenceNumber (m_txNext);
@@ -161,7 +160,7 @@ NrRlcUm::DoNotifyTxOpportunity (uint32_t bytes, uint8_t layer, uint8_t harqId)
             }
           else if (m_nextPduType == m_PduTypeSNSO)
             {
-              puts ("CASE 2.2");
+              NS_LOG_LOGIC ("CASE 2.2");
               NewHeader.SetHeaderType (m_PduTypeSNSO);
               NewHeader.SetSegmentationInfo (NrRlcUmHeader::SI_OTHER);
               NewHeader.SetSequenceNumber (header.GetSequenceNumber ());
@@ -186,9 +185,6 @@ NrRlcUm::DoNotifyTxOpportunity (uint32_t bytes, uint8_t layer, uint8_t harqId)
           packet->RemoveAtStart (lastBytes);
           packet->AddHeader (header);
           m_txBuffer.push_front (packet);
-          std::cout << "@@@ " << *tmpPacket << " " << tmpPacket->GetSize () << std::endl;
-          tmpPacket->PeekHeader (NewHeader);
-          std::cout << "### " << NewHeader << std::endl;
           params.pdu = tmpPacket;
           m_macSapProvider->TransmitPdu (params);
           lastBytes = 0;
@@ -203,7 +199,6 @@ NrRlcUm::DoNotifyHarqDeliveryFailure ()
 void
 NrRlcUm::DoReceivePdu (Ptr<Packet> p)
 {
-  puts ("DoReceivePdu");
   NS_LOG_FUNCTION (this << (uint32_t) m_rnti << (uint32_t) m_lcid << p->GetSize ());
   NrRlcUmHeader header;
   header.SetHeaderType (NrRlcUmHeader::PDU_COMPLETE);
