@@ -314,9 +314,9 @@ NrRlcUm::DoReceivePdu (Ptr<Packet> p)
   if (m_tReassembly.IsRunning ())
     {
       if (m_rxNextReassembly - m_rxTimerTrigger < m_windowSize ||
-          !InWindow (m_rxTimerTrigger) && m_rxTimerTrigger != m_rxNextHighest ||
-          m_rxNextReassembly + 1 == m_rxNextHighest &&
-              m_rxBuffer[m_rxNextReassembly.GetValue ()].IsAll ())
+          (!InWindow (m_rxTimerTrigger) && m_rxTimerTrigger != m_rxNextHighest) ||
+          (m_rxNextReassembly + 1 == m_rxNextHighest &&
+           m_rxBuffer[m_rxNextReassembly.GetValue ()].IsAll ()))
         {
           m_tReassembly.Cancel ();
         }
@@ -346,10 +346,10 @@ NrRlcUm::ExpireTimer (void)
 void
 NrRlcUm::CheckAndOpenTimer (void)
 {
-  if (m_rxNextReassembly + 1 - m_rxNextHighest > 0 &&
-          m_rxNextReassembly + 1 - m_rxNextHighest < m_windowSize ||
-      m_rxNextReassembly + 1 == m_rxNextHighest &&
-          !m_rxBuffer[m_rxNextReassembly.GetValue ()].IsAll ())
+  if ((m_rxNextReassembly + 1 - m_rxNextHighest > 0 &&
+       m_rxNextReassembly + 1 - m_rxNextHighest < m_windowSize) ||
+      (m_rxNextReassembly + 1 == m_rxNextHighest &&
+       !m_rxBuffer[m_rxNextReassembly.GetValue ()].IsAll ()))
     {
       SetupTimer ();
       m_tReassembly.Schedule ();
