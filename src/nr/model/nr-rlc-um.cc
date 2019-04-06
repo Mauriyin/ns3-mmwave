@@ -93,12 +93,13 @@ NrRlcUm::DoDispose ()
   NS_LOG_FUNCTION (this);
   m_txBuffer.clear ();
   m_rxBuffer.clear ();
+  m_txBufferSize = 0;
   m_txNext = 0;
   m_rxNextHighest = 0;
   m_rxNextReassembly = 0;
   m_rxTimerTrigger = 0;
   m_tReassembly.Cancel ();
-  m_nextPduType = NrRlcUmHeader::PDU_UNKNOW;
+  m_nextPduType = NrRlcUmHeader::PDU_COMPLETE;
 }
 
 void
