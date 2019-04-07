@@ -214,7 +214,7 @@ NrRlcUmHeader::GetSegmentOffset () const
 NS_OBJECT_ENSURE_REGISTERED (NrRlcAmHeader);
 
 NrRlcAmHeader::NrRlcAmHeader ()
-    : m_SN (0), m_SO (0), m_DC (0), m_P (0), m_SI (SI_UNKNOW), m_type (PDU_UNKNOW)
+    : m_ACK_SN (0), m_SO (0), m_DC (0), m_P (0), m_SI (SI_UNKNOW), m_type (PDU_UNKNOW)
 {
 }
 NrRlcAmHeader::~NrRlcAmHeader (){
@@ -258,8 +258,9 @@ NrRlcAmHeader::GetSerializedSize (void) const
       return 2;
 
     default:
-      break;
+      return 0;
     }
+  return 0;
 }
 void
 NrRlcAmHeader::Serialize (Buffer::Iterator iter) const
@@ -290,7 +291,7 @@ void
 NrRlcAmHeader::SetSequenceNumber (SequenceNumber sn)
 {
   NS_LOG_FUNCTION (this << sn);
-  m_SN = sn.GetValue ();
+  m_ACK_SN = sn.GetValue ();
 }
 SequenceNumber
 NrRlcAmHeader::GetSequenceNumber () const
@@ -299,10 +300,10 @@ NrRlcAmHeader::GetSequenceNumber () const
     {
     case PDU_SN12:
     case PDU_SN12SO:
-      return SequenceNumber (m_SN, 12);
+      return SequenceNumber (m_ACK_SN, 12);
     case PDU_SN18:
     case PDU_SN18SO:
-      return SequenceNumber (m_SN, 18);
+      return SequenceNumber (m_ACK_SN, 18);
 
     default:
       NS_ABORT_MSG ("Try to get sequence number failed");

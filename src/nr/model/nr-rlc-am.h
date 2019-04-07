@@ -48,7 +48,45 @@ public:
   virtual void DoNotifyHarqDeliveryFailure ();
   virtual void DoReceivePdu (Ptr<Packet> p);
 
+  void SetSnBitLength (uint8_t length);
+  uint8_t GetSnBitLength () const;
+
 private:
+  uint32_t m_maxTxBufferSize;
+  uint8_t m_snBitLen;
+
+  SequenceNumber m_txNextAck;
+  SequenceNumber m_txNext;
+  SequenceNumber m_PollSn;
+  uint32_t m_pduWithoutPoll;
+  uint32_t m_byteWithoutPoll;
+  SequenceNumber m_rxNext;
+  SequenceNumber m_rxNextStatusTrigger;
+  SequenceNumber m_rxHighestStatus;
+  SequenceNumber m_rxNextHighest;
+
+  // This constant is used by both the transmitting side and the receiving side of each AM RLC entity. AM_Window_Size = 2048 when a 12 bit SN is used, AM_Window_Size = 131072 when an 18 bit SN is used.
+  uint32_t m_windowSize;
+  //This parameter is used by the transmitting side of each AM RLC entity to limit the number of retransmissions corresponding to an RLC SDU, including its segments
+  uint32_t m_maxRetxThreshold;
+  //This parameter is used by the transmitting side of each AM RLC entity to trigger a poll for every pollPDU PDUs
+  uint32_t m_pollPDU;
+  //This parameter is used by the transmitting side of each AM RLC entity to trigger a poll for every pollByte bytes
+  uint32_t m_pollByte;
+
+  //This timer is used by the transmitting side of an AM RLC entity in order to retransmit a poll
+  Timer m_tPollRetransmit;
+  Time m_tPollRetransmitTime;
+  // /This timer is used by the receiving side of an AM RLC entity in order to detect loss of RLC PDUs at lower layer.
+  Timer m_tReassembly;
+  Time m_tReassemblyTime;
+  //This timer is used by the receiving side of an AM RLC entity in order to prohibit transmission of a STATUS PDU
+  Timer m_tStatusProhibit;
+  Time m_tStatusProhibitTime;
+
+  NrRlcAmHeader::PduType_t m_PduTypeSN;
+  NrRlcAmHeader::PduType_t m_PduTypeSNSO;
+  NrRlcAmHeader::PduType_t m_PduTypeStatus;
 };
 
 } // namespace ns3
