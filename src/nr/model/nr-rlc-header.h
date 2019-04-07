@@ -71,5 +71,62 @@ private:
   SIType_t m_SI;
   PduType_t m_type;
 };
+
+///////////////////////////////////////////////////////////////////////
+
+class NrRlcAmHeader : public Header
+{
+public:
+  struct SubHeader
+  {
+    uint32_t NACK_SN;
+    uint16_t SO_Start;
+    uint16_t SO_End;
+  };
+  typedef enum {
+    PDU_SN12,
+    PDU_SN18,
+    PDU_SN12SO,
+    PDU_SN18SO,
+    PDU_STATUS_SN12,
+    PDU_STATUS_SN18,
+    PDU_UNKNOW
+  } PduType_t;
+
+  typedef enum {
+    SI_ALL = 0x0,
+    SI_FIRST_SEG = 0x10,
+    SI_LAST_SEG = 0x20,
+    SI_OTHER = 0x30,
+    SI_UNKNOW = 0xff
+  } SIType_t;
+
+  NrRlcAmHeader ();
+  virtual ~NrRlcAmHeader ();
+  static TypeId GetTypeId (void);
+  virtual TypeId GetInstanceTypeId (void) const;
+  virtual uint32_t GetSerializedSize (void) const;
+  virtual void Serialize (Buffer::Iterator iter) const;
+  virtual uint32_t Deserialize (Buffer::Iterator iter);
+  virtual void Print (std::ostream &os) const;
+
+  virtual void SetHeaderType (PduType_t type);
+  virtual PduType_t GetHeaderType () const;
+  virtual void SetSequenceNumber (SequenceNumber sn);
+  virtual SequenceNumber GetSequenceNumber () const;
+  virtual void SetSegmentationInfo (SIType_t si);
+  virtual SIType_t GetSegmentationInfo () const;
+  virtual void SetSegmentOffset (uint32_t so);
+  virtual uint32_t GetSegmentOffset () const;
+
+private:
+  uint32_t m_ACK_SN;
+  uint16_t m_SO;
+  uint8_t m_DC;
+  uint8_t m_P;
+  SIType_t m_SI;
+  PduType_t m_type;
+};
+
 } // namespace ns3
 #endif
