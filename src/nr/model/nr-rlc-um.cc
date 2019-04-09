@@ -65,6 +65,18 @@ NrRlcUmRxBuffer::IsAll ()
 {
   return (m_currentLength == m_lengthWithoutLastSeq);
 }
+bool
+NrRlcUmRxBuffer::IsContinuous ()
+{
+  uint16_t expect = 0;
+  for (auto iter = m_buffer.begin (); iter != m_buffer.end (); ++iter)
+    {
+      if (iter->first != expect)
+        return false;
+      expect += iter->second->GetSize ();
+    }
+  return true;
+}
 Ptr<Packet>
 NrRlcUmRxBuffer::GetPacket ()
 {
@@ -336,7 +348,7 @@ NrRlcUm::DoReceivePdu (Ptr<Packet> p)
       if (m_rxNextReassembly - m_rxTimerTrigger < m_windowSize ||
           (!InWindow (m_rxTimerTrigger) && m_rxTimerTrigger != m_rxNextHighest) ||
           (m_rxNextReassembly + 1 == m_rxNextHighest &&
-           m_rxBuffer[m_rxNextReassembly.GetValue ()].IsAll ()))
+           m_rxBuffer[m_rxNextReassembly.GetValue ()].IsContinuous ()))
         {
           m_tReassembly.Cancel ();
         }
@@ -369,7 +381,7 @@ NrRlcUm::CheckAndOpenTimer (void)
   if ((m_rxNextReassembly + 1 - m_rxNextHighest > 0 &&
        m_rxNextReassembly + 1 - m_rxNextHighest < m_windowSize) ||
       (m_rxNextReassembly + 1 == m_rxNextHighest &&
-       !m_rxBuffer[m_rxNextReassembly.GetValue ()].IsAll ()))
+       !m_rxBuffer[m_rxNextReassembly.GetValue ()].IsContinuous ()))
     {
       SetupTimer ();
       m_tReassembly.Schedule ();

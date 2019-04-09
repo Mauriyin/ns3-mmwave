@@ -27,7 +27,7 @@
 #include "ns3/packet.h"
 #include <map>
 namespace ns3 {
-class NrRlcAmBuffer
+class NrRlcAmRxBuffer
 {
   struct last_t
   {
@@ -42,8 +42,8 @@ class NrRlcAmBuffer
   uint16_t m_lengthWithoutLastSeq;
 
 public:
-  NrRlcAmBuffer (){}
-  ~NrRlcAmBuffer (){}
+  NrRlcAmRxBuffer (){}
+  ~NrRlcAmRxBuffer (){}
   void AddPacket (Ptr<Packet> p, uint16_t so, bool isLast = false){}
   std::vector<last_t> GetLastVector (){return m_last;}
   bool isAll (){return 1;}
@@ -110,7 +110,7 @@ private:
 
   std::vector<Ptr<Packet>> m_txBuffer;
   std::vector<Ptr<Packet>> m_reTxBuffer;
-  std::map<uint32_t, NrRlcAmBuffer> m_rxBuffer;
+  std::map<uint32_t, NrRlcAmRxBuffer> m_rxBuffer;
 };
 
 } // namespace ns3

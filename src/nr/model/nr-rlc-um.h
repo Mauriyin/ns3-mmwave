@@ -40,6 +40,7 @@ public:
   bool AddLastPacket (Ptr<Packet> p, uint16_t so);
   void Clear ();
   bool IsAll ();
+  bool IsContinuous();
   Ptr<Packet> GetPacket ();
 };
 
