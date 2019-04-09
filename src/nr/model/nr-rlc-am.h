@@ -27,7 +27,27 @@
 #include "ns3/packet.h"
 #include <map>
 namespace ns3 {
+class NrRlcAmBuffer
+{
+  struct last_t
+  {
+    uint16_t soStart;
+    uint16_t soEnd;
+    uint16_t packetIndex;
+  };
 
+  std::vector<Ptr<Packet>> m_packetList;
+  std::vector<last_t> m_last;
+  uint16_t m_currentLength;
+  uint16_t m_lengthWithoutLastSeq;
+
+public:
+  NrRlcAmBuffer (){}
+  ~NrRlcAmBuffer (){}
+  void AddPacket (Ptr<Packet> p, uint16_t so, bool isLast = false){}
+  std::vector<last_t> GetLastVector (){return m_last;}
+  bool isAll (){return 1;}
+};
 class NrRlcAm : public NrRlc
 {
 public:
@@ -87,6 +107,10 @@ private:
   NrRlcAmHeader::PduType_t m_PduTypeSN;
   NrRlcAmHeader::PduType_t m_PduTypeSNSO;
   NrRlcAmHeader::PduType_t m_PduTypeStatus;
+
+  std::vector<Ptr<Packet>> m_txBuffer;
+  std::vector<Ptr<Packet>> m_reTxBuffer;
+  std::map<uint32_t, NrRlcAmBuffer> m_rxBuffer;
 };
 
 } // namespace ns3
