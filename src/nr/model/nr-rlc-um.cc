@@ -378,11 +378,13 @@ NrRlcUm::ExpireTimer (void)
 void
 NrRlcUm::CheckAndOpenTimer (void)
 {
-  if ((m_rxNextReassembly + 1 - m_rxNextHighest > 0 &&
-       m_rxNextReassembly + 1 - m_rxNextHighest < m_windowSize) ||
+  NS_LOG_FUNCTION (this);
+  if ((m_rxNextHighest != (m_rxNextReassembly + 1) &&
+       m_rxNextHighest - (m_rxNextReassembly + 1) < m_windowSize) ||
       (m_rxNextReassembly + 1 == m_rxNextHighest &&
        !m_rxBuffer[m_rxNextReassembly.GetValue ()].IsContinuous ()))
     {
+      NS_LOG_LOGIC ("Open Timer");
       SetupTimer ();
       m_tReassembly.Schedule ();
       m_rxTimerTrigger = m_rxNextHighest;
