@@ -33,10 +33,10 @@ class NrRlcAmRxBuffer
   {
     uint16_t soStart;
     uint16_t soEnd;
-    uint16_t packetIndex;
+    std::list<Ptr<Packet>>::iterator packetIndex;
   };
 
-  std::vector<Ptr<Packet>> m_packetList;
+  std::list<Ptr<Packet>> m_packetList;
   std::vector<last_t> m_last;
   uint16_t m_currentLength;
   uint16_t m_lengthWithoutLastSeq;
